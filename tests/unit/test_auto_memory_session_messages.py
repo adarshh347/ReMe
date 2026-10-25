@@ -237,7 +237,7 @@ async def test_identical_retry_with_sanitized_content_does_not_rewrite(step, mon
 
     monkeypatch.setattr(auto_memory.aiofiles, "open", record_open)
     await step._save_session_messages(_SESSION, [message])
-    assert write_modes == []
+    assert not write_modes
     assert step._session_path(_SESSION).read_bytes() == original
     await step._save_session_messages(_SESSION, [message, _msg("m1", "2026-10-01T10:01:00")])
     assert write_modes == ["a"]
