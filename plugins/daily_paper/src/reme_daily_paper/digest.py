@@ -13,8 +13,7 @@ from .base import (
     DailyPaperStep,
     normalize_chinese_title,
     resolve_unique_note_path,
-    strip_frontmatter,
-    structured_output,
+    markdown_output,
     utc_now_iso,
     write_markdown,
 )
@@ -136,10 +135,8 @@ class DailyPaperDigestStep(DailyPaperStep):
             },
         )
         self.logger.info(f"[{self.name}] agent done notes={len(analyses)}")
-        output = structured_output(result, DailyPaperMarkdownOutput)
-        body = strip_frontmatter(output.body)
-        if not output.desc.strip() or not body:
-            raise ValueError("Agent returned an empty daily paper brief")
+        output = markdown_output(result)
+        body = output.body
 
         day = run_day.isoformat()
         title = normalize_chinese_title(output.title, f"每日论文简报-{day}")
