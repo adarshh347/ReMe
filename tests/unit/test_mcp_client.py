@@ -7,7 +7,7 @@ from mcp.types import Tool, ToolAnnotations
 import pytest
 
 from reme.components.client.mcp_client import MCPClient
-from reme.constants import REME_DEFAULT_HOST, REME_DEFAULT_PORT
+from reme.constants import REME_DEFAULT_HOST, REME_DEFAULT_PORT, REME_SERVICE_INFO
 
 
 def test_default_mcp_client_uses_loopback_address():
@@ -24,6 +24,34 @@ def test_mcp_client_converts_wildcard_bind_address_to_loopback():
 
     assert client.host == "127.0.0.1"
     assert client.port == 8123
+
+
+@pytest.mark.parametrize(
+    ("host", "port", "service_info", "expected_host", "expected_port"),
+    [
+        ("192.0.2.10", None, None, "192.0.2.10", REME_DEFAULT_PORT),
+        (None, 8123, None, REME_DEFAULT_HOST, 8123),
+        ("192.0.2.10", None, '{"host":"192.0.2.20","port":9000}', "192.0.2.10", 9000),
+        (None, 8123, '{"host":"192.0.2.20","port":9000}', "192.0.2.20", 8123),
+    ],
+)
+def test_mcp_client_preserves_explicit_address_fields(
+    monkeypatch,
+    host,
+    port,
+    service_info,
+    expected_host,
+    expected_port,
+):
+    """Only missing fields fall back to discovery or defaults."""
+    if service_info is None:
+        monkeypatch.delenv(REME_SERVICE_INFO, raising=False)
+    else:
+        monkeypatch.setenv(REME_SERVICE_INFO, service_info)
+
+    client = MCPClient(host=host, port=port)
+
+    assert (client.host, client.port) == (expected_host, expected_port)
 
 
 @pytest.mark.asyncio
